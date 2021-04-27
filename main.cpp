@@ -2,7 +2,7 @@
 #include <omp.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <cmath>
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -13,26 +13,35 @@
 
 using namespace std;
 
-// const int V = 5;
-// auto adjMatrix = new int[V][V];
-/*
+int* adj, *xadj;
+int k, V;
+
+// getElement returns the element of r'th row and c'th column.
+int getElement(int r, int c) {
+	int startIdx = xadj[r], endIdx = xadj[r+1];	
+  for (int i = startIdx; i < endIdx; i++) {
+		int curr = adj[i];
+		if (curr == c) {
+			return 1;
+		}
+	}	
+	return -1;
+}
+
 int dfs(bool *marked, int k, int v, int start, int count) {
   marked[v] = true;
-
-  // v => baktigimiz node // row
-  // start => baktigimiz node'un baslangici
-  // xadj => her bir rowda
-
   if (k == 0) {
+ 
     marked[v] = false;
-    if(adjMatrix[v][start] == 1) {
+    // adjMatrix[v][start] == 1
+    if(getElement(v, start) == 1) {
       count++;
     }
     return count;
   }
 
-  for (int i = 0; i < V; i++) {
-    if (marked[i] == false && adjMatrix[v][i] == 1) {
+  for (int i = 0; i < V+1; i++) {
+    if (marked[i] == false && getElement(v, i) == 1) {
       count = dfs(marked, k-1, i, start,count);
     }
   }
@@ -40,28 +49,37 @@ int dfs(bool *marked, int k, int v, int start, int count) {
   return count;
 }
 
+
 // seqCountCycles counts the cycles of length k
 // for each vertices in a sequential manner.
-void seqCountCycles(int k, int* nov) {
+void countCycles(int V) {
+  int lV = V + 1;
+  // int lV = V - 1;
 
-  printf("nov - 1 %d\n", (*nov) - 1 );
-
-  int lV = (*nov) - 1;
-
-  bool* markedx = new bool[lV];
+ // bool* markedx = new bool[lV];
   auto freq = new int[lV];
-  for (int i = 0; i < lV; i++) {
-    int count = 0;
+  int count = 0;
+  cout << "starting! " << endl;
+  double start = omp_get_wtime();
+  #pragma omp parallel for firstprivate(count) 
+  for (int i = 0; i < lV; i++) {   
+  
+    bool* markedx = new bool[lV];
     count = dfs(markedx, k-1, i, i, count);
+   
     freq[i] = count;
+    count = 0;
+    delete[] markedx;
   }
-
+    double end = omp_get_wtime();
+    cout << "finished in " << end - start << endl;
   // Print the number of cycles of length k
+  /*
   for (int i = 0; i < lV; i++) {
-    cout << "i: " << i << "\tfreq[i] " << freq[i]/2 << endl;
-  }
+    cout << "i: " << i << "\tfreq[i] " << ceil((float)(freq[i] / 2)) << endl;
+  } 
+  */
 }
-*/
 
 void readFile(string filePath) {
   ifstream infile(filePath);
@@ -73,37 +91,51 @@ void readFile(string filePath) {
   // lastLine keeps previous read line. If the last line of the given file
   // is empty (e.g, '\n'), we can use lastLine to get the last line.
   string line, lastLine;
-  int adjSize = 0;
+  int adjSize = 0, currMax = 0;
+  int u = 0, v = 0;
   while (getline(infile, line)) {
+    stringstream ss(line);
+     
     if (line.length() != 0) {
+       ss >> u >> v;
+       int localMax = max(u, v);
+       if (localMax > currMax) {
+         currMax = localMax;
+       }
       lastLine = line;
       adjSize++;
     }
   }
 
   // File contains m number of vertices. Get m from the lastLine.
-  stringstream ss(lastLine);
-  int V1 = 0, V2 = 0;
-  ss >> V1 >> V2;
-  int V = max(V1, V2);
+	V = currMax;
 
-  int* xadj = new int[V + 1];
-  int* adj = new int[adjSize * 2];
+  xadj = new int[V + 1];
+  adj = new int[adjSize * 2];
 
   infile.clear();
   infile.seekg(0);
 
-  int u = 0, v = 0;
+  
   unordered_map<int, int> map;
   unordered_map<int, vector<int>> order;
   while (getline(infile, line)) {
     if (line.length() != 0) {
       stringstream ss(line);
       ss >> u >> v;
+    
+			if (u == v) {
+				continue;
+			}
 
+			// if u is not initialized.
       if (map.find(u) == map.end()) {
         map[u] = 1;
-        map[v] = 1;
+				if (map.find(v) == map.end()) {
+					map[v] = 1;
+				} else {
+					map[v]++;
+				}
 
         vector<int> tmp;
         tmp.push_back(v);
@@ -137,15 +169,12 @@ void readFile(string filePath) {
     }
   }
 
-  cout << "V: " << V << endl;
-  for (int i = 0; i < adjSize * 2; i++) {
-    cout << "i " << i << '\t' << adj[i] << endl;
-  }
+	cout << "V: " << V << endl;
 
-  for (int i = 0; i < V + 2; i++) {
-    cout << "i " << i << '\t' << xadj[i] << endl;
-  }
   infile.close();
+	cout << "count cycles " << endl;
+	countCycles(V);
+	cout << "count cycles finished" << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -156,7 +185,7 @@ int main(int argc, char* argv[]) {
 
   char* filePath = argv[1];
   char* kStr = argv[2];
-  int k = atoi(kStr);
+  k = atoi(kStr);
 
   readFile(filePath);
   return 0;
