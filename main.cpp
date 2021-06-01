@@ -13,75 +13,102 @@
 
 using namespace std;
 
-int* adj, *xadj;
-int k, V;
+int* adj, *xadj, *results;
+int k, nnz, nov;
 
-// getElement returns the element of r'th row and c'th column.
-int getElement(int r, int c) {
-	int startIdx = xadj[r], endIdx = xadj[r+1];	
-  for (int i = startIdx; i < endIdx; i++) {
-		int curr = adj[i];
-		if (curr == c) {
-			return 1;
-		}
-	}	
-	return -1;
+void wrapper(int* adj, int* xadj, int* results, int nnz, int nov, int k);
+
+int* get_neighbors(int v) {
+  int n = xadj[v+1] - xadj[v];
+  int* out = new int[n];
+  std::copy(adj + xadj[v],adj + xadj[v+1], out);
+  return out;
 }
 
-int dfs(bool *marked, int k, int v, int start, int count) {
-  marked[v] = true;
-  if (k == 0) {
- 
-    marked[v] = false;
-    // adjMatrix[v][start] == 1
-    if(getElement(v, start) == 1) {
-      count++;
+int cycles_3(int v1) {
+  int count = 0;
+  int n1 = xadj[v1+1] - xadj[v1];
+  for (int i1 = 0; i1 < n1; i1++) {
+    int v2 = adj[xadj[v1]+i1];
+    int n2 = xadj[v2+1] - xadj[v2];
+    for (int i2 = 0; i2 < n2; i2++) {
+      int v3 = adj[xadj[v2]+i2];
+      if (v3 == v1)
+        continue;
+      int n3 = xadj[v3+1] - xadj[v3];
+      for (int i3 = 0; i3 < n3; i3++) {
+        int v4 = adj[xadj[v3]+i3];
+        if (v4 == v1) {
+          count++;
+          //cout << "Path " << v1 << " " << v2 << " " << v3 << " " << v4 << endl;
+        }
+      }
     }
-    return count;
   }
-
-  for (int i = 0; i < V+1; i++) {
-    if (marked[i] == false && getElement(v, i) == 1) {
-      count = dfs(marked, k-1, i, start,count);
+  return count;
+}
+int cycles_4(int v1) {
+  int count = 0;
+  int n1 = xadj[v1+1] - xadj[v1];
+  for (int i1 = 0; i1 < n1; i1++) {
+    int v2 = adj[xadj[v1]+i1];
+    int n2 = xadj[v2+1] - xadj[v2];
+    for (int i2 = 0; i2 < n2; i2++) {
+      int v3 = adj[xadj[v2]+i2];
+      if (v3 == v1)
+        continue;
+      int n3 = xadj[v3+1] - xadj[v3];
+      for (int i3 = 0; i3 < n3; i3++) {
+        int v4 = adj[xadj[v3]+i3];
+        if (v4 == v3 || v4 == v2 || v4 == v1)
+          continue;
+        int n4 = xadj[v4+1] - xadj[v4];
+        for (int i4 = 0; i4 < n4; i4++) {
+          int v5 = adj[xadj[v4]+i4];
+          if (v5 == v1) {
+            count++;
+          }
+        }
+      }
     }
   }
-  marked[v] = false;
+  return count;
+}
+int cycles_5(int v1) {
+  int count = 0;
+  int n1 = xadj[v1+1] - xadj[v1];
+  for (int i1 = 0; i1 < n1; i1++) {
+    int v2 = adj[xadj[v1]+i1];
+    int n2 = xadj[v2+1] - xadj[v2];
+    for (int i2 = 0; i2 < n2; i2++) {
+      int v3 = adj[xadj[v2]+i2];
+      if (v3 == v1)
+        continue;
+      int n3 = xadj[v3+1] - xadj[v3];
+      for (int i3 = 0; i3 < n3; i3++) {
+        int v4 = adj[xadj[v3]+i3];
+        if (v4 == v3 || v4 == v2 || v4 == v1)
+          continue;
+        int n4 = xadj[v4+1] - xadj[v4];
+        for (int i4 = 0; i4 < n4; i4++) {
+          int v5 = adj[xadj[v4]+i4];
+          if (v5 == v3 || v5 == v4 || v5 == v2 || v5 == v1)
+            continue;
+          int n5 = xadj[v5+1] - xadj[v5];
+          for (int i5 = 0; i5 < n5; i5++) {
+            int v6 = adj[xadj[v5]+i5];
+            if (v6 == v1) {
+              count++;
+            }
+          }
+        }
+      }
+    }
+  }
   return count;
 }
 
-
-// seqCountCycles counts the cycles of length k
-// for each vertices in a sequential manner.
-void countCycles(int V) {
-  int lV = V + 1;
-  // int lV = V - 1;
-
- // bool* markedx = new bool[lV];
-  auto freq = new int[lV];
-  int count = 0;
-  cout << "starting! " << endl;
-  double start = omp_get_wtime();
-  #pragma omp parallel for firstprivate(count) 
-  for (int i = 0; i < lV; i++) {   
-  
-    bool* markedx = new bool[lV];
-    count = dfs(markedx, k-1, i, i, count);
-   
-    freq[i] = count;
-    count = 0;
-    delete[] markedx;
-  }
-    double end = omp_get_wtime();
-    cout << "finished in " << end - start << endl;
-  // Print the number of cycles of length k
-  /*
-  for (int i = 0; i < lV; i++) {
-    cout << "i: " << i << "\tfreq[i] " << ceil((float)(freq[i] / 2)) << endl;
-  } 
-  */
-}
-
-void readFile(string filePath) {
+void readFile(string filePath, int k) {
   ifstream infile(filePath);
   if (!infile.is_open()) {
     cout << "cannot open file: " << filePath << endl;
@@ -93,6 +120,7 @@ void readFile(string filePath) {
   string line, lastLine;
   int adjSize = 0, currMax = 0;
   int u = 0, v = 0;
+  unordered_map<int, vector<int>> mat;
   while (getline(infile, line)) {
     stringstream ss(line);
      
@@ -104,89 +132,112 @@ void readFile(string filePath) {
        }
       lastLine = line;
       adjSize++;
-    }
-  }
-
-  // File contains m number of vertices. Get m from the lastLine.
-	V = currMax;
-
-  xadj = new int[V + 1];
-  adj = new int[adjSize * 2];
-
-  infile.clear();
-  infile.seekg(0);
-
-  
-  unordered_map<int, int> map;
-  unordered_map<int, vector<int>> order;
-  while (getline(infile, line)) {
-    if (line.length() != 0) {
-      stringstream ss(line);
-      ss >> u >> v;
-    
-			if (u == v) {
-				continue;
-			}
-
-			// if u is not initialized.
-      if (map.find(u) == map.end()) {
-        map[u] = 1;
-				if (map.find(v) == map.end()) {
-					map[v] = 1;
-				} else {
-					map[v]++;
-				}
-
-        vector<int> tmp;
-        tmp.push_back(v);
-        order[u] = tmp;
-
-        vector<int> tmp2;
-        tmp2.push_back(u);
-        order[v] = tmp2;
+      if (mat.find(u) == mat.end()) {
+        vector<int> val;
+        val.push_back(v);
+        mat[u] = val;
       } else {
-        map[u]++;
-        map[v]++;
-
-        order[u].push_back(v);
-        order[v].push_back(u);
+        mat[u].push_back(v);
+      }
+      if (mat.find(v) == mat.end()) {
+        vector<int> val;
+        val.push_back(u);
+        mat[v] = val;
+      } else {
+        mat[v].push_back(u);
       }
     }
   }
-  xadj[0] = 0;
-  int prev = 0;
-  for (int i = 1; i < V + 2; i++) {
-    xadj[i] = prev + map[i - 1];
-    prev = xadj[i];
-  }
+  // File contains m number of vertices. Get m from the lastLine.
+  nnz = adjSize*2;
+  nov = currMax+1;
 
-  int k = 0;
-  for (int i = 0; i < adjSize; i++) {
-    vector<int> x = order[i];
-    for (int j = 0; j < x.size(); j++) {
-      adj[k] = x[j];
-      k++;
+  xadj = new int[nov+1];
+  results = new int[nov-1];
+  adj = new int[adjSize * 2];
+  
+  infile.clear();
+  infile.seekg(0);
+  
+  xadj[0] = 0;
+  int adj_i = 0;
+  for (int i = 0; i < nov; i++) {
+    xadj[i+1] = xadj[i] + mat[i].size();
+    for (int j = 0; j < mat[i].size(); j++) {
+      adj[adj_i] = mat[i][j];
+      adj_i++;
     }
   }
-
-	cout << "V: " << V << endl;
-
   infile.close();
-	cout << "count cycles " << endl;
-	countCycles(V);
-	cout << "count cycles finished" << endl;
+}
+
+void save_results() {
+  ofstream outfile;
+  outfile.open ("results.txt");
+  for (int i = 0; i < nov; i++) {
+    outfile << i << " " << results[i] << endl;
+  }
+  outfile.close();
+}
+
+void cycles_cpu(int k) {
+	cout << "count cycles CPU" << endl;
+
+  double start = omp_get_wtime();
+  if (k == 3) {
+    #pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < nov; i++) {
+      int r = cycles_3(i);
+      results[i] = r;
+    }
+  } else if (k == 4) {
+    #pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < nov; i++) {
+      int r = cycles_4(i);
+      results[i] = r;
+    }
+  } else if (k == 5) {
+    #pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < nov; i++) {
+      int r = cycles_5(i);
+      results[i] = r;
+    }
+  } else {
+    cout << "ERROR: Invalid k" << endl;
+  }
+  double duration = omp_get_wtime() - start;
+  cout <<"TIME: " << duration << endl;
+  cout << "count cycles finished" << endl;
+}
+void cycles_gpu(int k) {
+  cout << "count cycles GPU" << endl;
+  wrapper(adj, xadj, results, nnz, nov, k);
 }
 
 int main(int argc, char* argv[]) {
-  if (argc != 3) {
+  if (argc != 3 && argc != 4) {
     printf("invalid number of arguments\n");
     return 1;
   }
-
+  int nt = omp_get_max_threads();
+  if (argc == 4) {
+    nt = atoi(argv[3]);
+  }
+  
   char* filePath = argv[1];
   char* kStr = argv[2];
   k = atoi(kStr);
 
-  readFile(filePath);
+  readFile(filePath, k);
+  
+  if (nt == 0) {
+    cout << "Using GPU\n";
+    cycles_gpu(k);
+  } else {
+    omp_set_num_threads(nt);
+    cout << "Using " << nt << " threads.\n";
+    cycles_cpu(k);
+  }
+  save_results();
   return 0;
 }
