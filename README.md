@@ -37,4 +37,13 @@ $ nvcc main.cpp kernel.cu -O3 -o gpu.out -XCompiler -fopenmp
 $ ./gpu.out ./input_file.txt 4 1
 ```
 
+For running on CPU;
+
+```shell
+$ g++ main.cpp -O3 -fopenmp
+$ ./a.out ./input_file.txt 4 1
+```
+
+Caveat, make sure that proper versions of the compilers, as described above, are loaded before running on these commands.
+
 
