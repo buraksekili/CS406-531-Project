@@ -43,10 +43,10 @@ For running on CPU with `n` threads, `c` cycles:
 
 For running on GPU with `n` threads, `c` cycles: 
 ```shell
-/program.out ./amazon.txt c 0
+./program.out ./amazon.txt c 0
 ```
 
-For running CPU and GPU together with c cycles: 
+For running CPU and GPU together with `c` cycles: 
 
 ```shell
 ./program.out ./amazon.txt c -1
