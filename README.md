@@ -8,20 +8,12 @@ The final report of the project is available on [https://github.com/buraksekili/
 
 ## Installation
 
-`git clone https://github.com/buraksekili/CS406-531-Project.git`
-
-
-The required version of the `gcc` is `8.2.0` for the CPU code `main.cpp`. 
-
-You must change the version of gcc by running; 
-
 ```shell
-$ module load gcc/8.2.0
+git clone https://github.com/buraksekili/CS406-531-Project.git
 ```
 
-For GPU code, `cuda/10.0` and `gcc/7.5.0` is required. 
-
-You must change the version of gcc and CUDA by running; 
+The required versions of the `gcc` and `cuda` are `cuda/10.0` and `gcc/7.5.0`.
+You can change the version of gcc and CUDA by running; 
 
 ```shell
 $ module load gcc/7.5.0
@@ -38,18 +30,18 @@ $ nvcc main.cu kernel.cu -O3 -o program.out -Xcompiler -fopenmp
 
 For running on CPU with `n` threads, `c` cycles: 
 ```shell
-./program.out ./amazon.txt c n
+$ ./program.out ./amazon.txt c n
 ```
 
 For running on GPU with `n` threads, `c` cycles: 
 ```shell
-./program.out ./amazon.txt c 0
+$ ./program.out ./amazon.txt c 0
 ```
 
 For running CPU and GPU together with `c` cycles: 
 
 ```shell
-./program.out ./amazon.txt c -1
+$ ./program.out ./amazon.txt c -1
 ```
 
 
