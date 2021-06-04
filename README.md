@@ -33,6 +33,11 @@ For running on CPU with `n` threads, `c` cycles:
 $ ./program.out ./amazon.txt c n
 ```
 
+* For instance, running on CPU with `8` threads to find cycles with length `4`;
+```shell
+$ ./program.out ./amazon.txt 4 8
+```
+
 For running on GPU with `n` threads, `c` cycles: 
 ```shell
 $ ./program.out ./amazon.txt c 0
