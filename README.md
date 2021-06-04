@@ -30,20 +30,26 @@ $ module load cuda/10.0
 
 ## Usage
 
-After loading proper versions of the `gcc` and `cuda`, you can run;
+Compile the program with;
 
 ```shell
-$ nvcc main.cpp kernel.cu -O3 -o gpu.out -XCompiler -fopenmp
-$ ./gpu.out ./input_file.txt 4 1
+$ nvcc main.cu kernel.cu -O3 -o program.out -Xcompiler -fopenmp
 ```
 
-For running on CPU;
+For running on CPU with `n` threads, `c` cycles: 
+```shell
+./program.out ./amazon.txt c n
+```
+
+For running on GPU with `n` threads, `c` cycles: 
+```shell
+/program.out ./amazon.txt c 0
+```
+
+For running CPU and GPU together with c cycles: 
 
 ```shell
-$ g++ main.cpp -O3 -fopenmp
-$ ./a.out ./input_file.txt 4 1
+./program.out ./amazon.txt c -1
 ```
-
-Caveat, make sure that proper versions of the compilers, as described above, are loaded before running on these commands.
 
 
